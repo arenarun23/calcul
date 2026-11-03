@@ -531,12 +531,16 @@ function sinoToNum(s){
     else return null}
   return total+(cur||0)}
 function parseNum(raw){
-  let s=raw.replace(/[\s.,!?]/g,'');
-  if(/모르|몰라|패스/.test(s))return'skip';
+  let s=raw.replace(/[\s.,!?'"]/g,'');
+  if(/모르|몰라|패스|넘어/.test(s))return'skip';
   const d=s.match(/\d+/);if(d)return parseInt(d[0],10);
-  const t=s.replace(/(입니다|이에요|예요|이요|요)$/,'')||s;
-  if(/^[영공일이삼사오육칠팔구십백]+$/.test(t)){const v=sinoToNum(t);if(v!==null)return v}
-  return nativeToNum(t)}
+  s=s.replace(/정답|답은|답이|답|입니다|이에요|예요|에요|이야|이다|이에/g,'').replace(/(요|개|번|살)$/,'');
+  if(!s)return null;
+  if(/^[영공일이삼사오육칠팔구십백]+$/.test(s)){const v=sinoToNum(s);if(v!==null)return v}
+  const nv=nativeToNum(s);if(nv!==null)return nv;
+  const runs=(s.match(/[영공일이삼사오육칠팔구십백]+/g)||[]).sort((a,b)=>b.length-a.length);
+  for(const r of runs){const v=sinoToNum(r);if(v!==null)return v}
+  return null}
 
 /* ---------- 게임 흐름 ---------- */
 const TOTAL=10;
@@ -573,7 +577,7 @@ function openInput(){
   G.phase='answering';
   if(sel.mode==='voice'){
     $('#pVoice').hidden=false;$('#pWrite').hidden=true;$('#pPad').hidden=true;
-    setMic('idle');listen();
+    setMic('idle');setTimeout(()=>listen(),450);
   }else{
     $('#pWrite').hidden=false;$('#pVoice').hidden=true;$('#pPad').hidden=true;
     sizeCv();clearCv();$('#wrStatus').textContent='점선 위에 답을 써 보세요.';
@@ -650,27 +654,41 @@ function setMic(s,msg){
   $('#micStatus').textContent=msg||({idle:'마이크를 누르고 답을 말해 보세요.',listening:'듣고 있어요… 답을 말해 주세요!',retry:'잘 못 들었어요. 마이크를 누르고 다시 말해 줄래요?',blocked:'마이크가 꺼져 있어요. 아래 숫자 버튼으로 답해 보세요.'}[s]||'');
 }
 function stopListen(){if(rec){try{rec.onend=rec.onerror=rec.onresult=null;rec.abort()}catch(e){}rec=null}}
-function listen(){
+let listenTries=0;
+function listen(fresh=true){
   if(G.phase!=='answering')return;
+  if(fresh)listenTries=0;
   if(!SR){setMic('blocked','이 기기는 말 알아듣기를 지원하지 않아요. 숫자 버튼으로 답해 보세요.');showPad();return}
   stopListen();
   try{
-    rec=new SR();rec.lang='ko-KR';rec.interimResults=false;rec.maxAlternatives=5;rec.continuous=false;
-    rec.onstart=()=>setMic('listening');
-    rec.onresult=e=>{
-      const alts=[...e.results[0]].map(r=>r.transcript);let n=null;
-      for(const t of alts){const v=parseNum(t);if(v!==null){n=v;break}}
-      if(n==='skip')return giveUp();
-      if(n===null)return setMic('retry',`"${alts[0]}"라고 들었어요. 숫자로 다시 말해 줄래요?`);
-      setMic('idle',`"${alts[0]}" → ${n}`);
-      setTimeout(()=>judge(n),600);
+    const r=rec=new SR();r.lang='ko-KR';r.interimResults=true;r.maxAlternatives=5;r.continuous=false;
+    let handled=false,done=false,last=null;
+    const handle=alts=>{
+      if(handled||G.phase!=='answering')return false;
+      const vals=alts.map(parseNum);
+      if(vals.includes('skip')){handled=true;giveUp();return true}
+      const ok=vals.filter(v=>v!==null);
+      if(!ok.length)return false;
+      const n=ok.includes(G.q.ans)?G.q.ans:ok[0];
+      handled=true;setMic('idle',`"${alts[0]}" → ${n}`);setTimeout(()=>judge(n),500);return true};
+    const retry=msg=>{
+      if(done||handled||rec!==r)return;done=true;
+      if(++listenTries<3){setMic('retry',msg+' 다시 말해 주세요!');setTimeout(()=>listen(false),600)}
+      else{setMic('retry',msg+' 마이크를 눌러 다시 말하거나, 숫자 버튼으로 답해요.');showPad()}};
+    r.onstart=()=>setMic('listening');
+    r.onresult=e=>{
+      const res=e.results[e.results.length-1],alts=[...res].map(x=>x.transcript);last=alts;
+      if(res.isFinal){if(!handle(alts))retry(`"${alts[0]}"라고 들었어요.`)}
+      else $('#micStatus').textContent='듣고 있어요… '+alts[0];
     };
-    rec.onerror=e=>{
-      if(e.error==='not-allowed'||e.error==='service-not-allowed'){setMic('blocked');showPad()}
-      else setMic('retry');
+    r.onerror=e=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'){done=true;setMic('blocked');showPad()}
+      else if(e.error==='audio-capture'){done=true;setMic('blocked','마이크를 찾을 수 없어요. 숫자 버튼으로 답해 보세요.');showPad()}
+      else if(e.error==='network'){done=true;setMic('blocked','말 알아듣기는 인터넷이 필요해요. 숫자 버튼으로 답해 보세요.');showPad()}
+      else if(e.error!=='aborted')retry('소리가 잘 안 들렸어요.');
     };
-    rec.onend=()=>{if($('#btnMic').dataset.s==='listening')setMic('retry')};
-    rec.start();
+    r.onend=()=>{if(handled||done||rec!==r)return;if(last&&handle(last))return;retry(last?`"${last[0]}"라고 들었어요.`:'소리가 잘 안 들렸어요.')};
+    r.start();
   }catch(e){setMic('blocked');showPad()}
 }
 $('#btnMic').onclick=()=>{if(G.phase==='answering')listen()};
