@@ -677,8 +677,8 @@ function listen(fresh=true){
   if(G.phase!=='answering')return;
   if(fresh)listenTries=0;
   if(!SR){setMic('blocked','이 기기는 말 알아듣기를 지원하지 않아요. 숫자 버튼으로 답해 보세요.');showPad();return}
-  stopListen();
-  try{
+  const had=!!rec;stopListen();
+  setTimeout(()=>{if(G.phase!=='answering')return;try{
     const r=rec=new SR();r.lang='ko-KR';r.interimResults=true;r.maxAlternatives=5;r.continuous=false;
     let handled=false,done=false,last=null;
     const handle=alts=>{
@@ -694,6 +694,7 @@ function listen(fresh=true){
       if(++listenTries<3){setMic('retry',msg+' 다시 말해 주세요!');setTimeout(()=>listen(false),600)}
       else{setMic('retry',msg+' 마이크를 눌러 다시 말하거나, 숫자 버튼으로 답해요.');showPad()}};
     r.onstart=()=>setMic('listening');
+    r.onsoundstart=()=>{if(!handled)$('#micStatus').textContent='소리가 들려요… 말을 마치면 마이크를 한 번 더 눌러 주세요.'};
     r.onresult=e=>{
       const res=e.results[e.results.length-1],alts=[...res].map(x=>x.transcript);last=alts;
       if(res.isFinal){if(!handle(alts))retry(`"${alts[0]}"라고 들었어요.`)}
@@ -703,13 +704,13 @@ function listen(fresh=true){
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){done=true;setMic('blocked');showPad()}
       else if(e.error==='audio-capture'){done=true;setMic('blocked','마이크를 찾을 수 없어요. 숫자 버튼으로 답해 보세요.');showPad()}
       else if(e.error==='network'){done=true;setMic('blocked','말 알아듣기는 인터넷이 필요해요. 숫자 버튼으로 답해 보세요.');showPad()}
-      else if(e.error!=='aborted')retry('소리가 잘 안 들렸어요.');
+      else if(e.error!=='aborted')retry(`소리가 잘 안 들렸어요 (${e.error}).`);
     };
     r.onend=()=>{if(handled||done||rec!==r)return;if(last&&handle(last))return;retry(last?`"${last[0]}"라고 들었어요.`:'소리가 잘 안 들렸어요.')};
     r.start();
-  }catch(e){setMic('blocked');showPad()}
+  }catch(e){setMic('blocked');showPad()}},had?350:0);
 }
-$('#btnMic').onclick=()=>{if(G.phase==='answering')listen()};
+$('#btnMic').onclick=()=>{if(G.phase!=='answering')return;if(rec&&$('#btnMic').dataset.s==='listening'){try{rec.stop()}catch(e){}}else listen()};
 $('#btnShowPad').onclick=()=>{stopListen();showPad()};
 
 /* ---------- 숫자 패드 ---------- */
