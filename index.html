@@ -612,11 +612,11 @@ function judge(val){
     if(G.tries===1){
       G.phase='answering';
       const h=$('#hint');h.hidden=false;
-      h.innerHTML=`<p><b>${val}</b>이라고 했군요. ${diag(G.q,val)}</p><p>${hintFor(G.q)} 한 번 더 해 볼까요?</p>`;
+      h.innerHTML=`<p style="font-family:var(--font-display);font-size:1.5rem">다시 한 번 생각해 보세요.</p><p><b>${val}</b>이라고 했군요. ${diag(G.q,val)} ${hintFor(G.q)}</p>`;
       if(G.q.L!==0)$('#qvis').innerHTML=pvis(G.q);
       $('#mascot').dataset.mood='oops';
       resetInputs();
-      say(`${sino(val)}이라고 했군요. ${toSpeech(diag(G.q,val))} ${hintFor(G.q)} 한 번 더 해 볼까요?`,()=>{G.phase='asking';openInput()});
+      say('다시 한 번 생각해 보세요.',()=>{G.phase='asking';openInput()});
     }else{G.res[G.idx]='miss';feedback('miss')}
   }
 }
