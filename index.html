@@ -261,6 +261,26 @@ body.playing main{flex:1;min-height:0;display:flex;flex-direction:column}
   .mic{width:clamp(44px,15vh,64px);height:clamp(44px,15vh,64px)}
   .soft{padding:.15rem .8rem;font-size:.95rem}.big{padding:.2rem 1rem;font-size:1.05rem}
 }
+
+/* 폰: 고르기 메뉴를 가로로 한 줄씩 */
+@media (max-width:640px){
+  #chKind,#chLevel{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #chMode{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .choices{gap:6px}
+  .choice{padding:.35rem .45rem;border-width:2px;border-radius:14px;align-items:center;text-align:center;justify-content:flex-start}
+  .choice .g{font-size:1.5rem}
+  .choice .t{font-size:1rem}
+  .choice .s{font-size:.7rem;line-height:1.2}
+  .choice svg{width:1.5rem;height:1.5rem}
+  #chMode .choice{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:.3rem .5rem}
+  #chMode .choice .s{flex-basis:100%}
+  .choice[aria-pressed="true"]{box-shadow:0 3px 0 var(--primary)}
+  .hero{margin-bottom:.6rem;gap:8px}
+  .group{margin-bottom:.6rem}
+  .group h2{font-size:1.05rem;margin-bottom:.35rem}
+  .go{margin-top:.8rem;padding:.5rem 2.5rem;font-size:1.4rem}
+  .top{margin-bottom:.5rem}
+}
 </style>
 </head>
 <body>
