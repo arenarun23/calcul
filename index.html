@@ -193,6 +193,74 @@ h2{font-family:var(--font-display);font-weight:400;font-size:1.35rem;margin:0 0 
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* ---- 놀이 화면: 한 화면에 맞추기. 왼쪽 문제, 오른쪽 위 필기(말하기), 오른쪽 아래 숫자 버튼 ---- */
+html{font-size:clamp(14px,calc(2.2vmin + 6px),24px)}
+:root{--us:clamp(16px,3.4vmin,32px)}
+body.playing .top{display:none}
+body.playing .app{height:100dvh;display:flex;flex-direction:column;padding-block:8px}
+body.playing main{flex:1;min-height:0;display:flex;flex-direction:column}
+#vPlay:not([hidden]){flex:1;min-height:0;display:flex;flex-direction:column}
+.bar{padding-left:52px;margin-bottom:8px;min-height:44px}
+.mini{font-size:.8rem;padding:.3rem .8rem}
+.stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:12px;padding:12px;overflow:hidden;border-radius:22px}
+.qside{min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.aside{min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
+.atop{flex:1;min-height:0;display:flex;flex-direction:column}
+.atop .panel{margin:0;flex:1;min-height:0;width:100%;gap:.4rem}
+.talk{gap:10px}
+.mascot{width:clamp(48px,12vmin,96px);height:clamp(48px,12vmin,96px)}
+.qbubble{padding:.4rem .9rem .6rem}
+.eq{font-size:clamp(1.7rem,6.5vmin,3.2rem)}
+.say{font-size:1rem}
+.replay{margin-top:2px}
+.soft{padding:.3rem 1rem;font-size:1.1rem;border-width:3px}
+.big{padding:.4rem 1.4rem;font-size:1.3rem}
+.vis{margin-top:0}
+.u{--s:var(--us)}
+.cell{--cs:var(--us)}
+.big-u .u{--s:calc(var(--us)*1.25)}
+.big-u .cell{--cs:calc(var(--us)*1.25)}
+.hint{margin:0;padding:.4rem .7rem;font-size:.9rem}
+.hint-t{font-family:var(--font-display);font-size:1.2rem}
+.mic{width:clamp(60px,15vmin,104px);height:clamp(60px,15vmin,104px)}
+.mic svg{width:50%;height:50%}
+.status{min-height:0;font-size:.85rem;line-height:1.3}
+.cvwrap{flex:1;min-height:70px}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+#pVoice:not([hidden]){justify-content:center}
+#pPad{margin:0;gap:.25rem;align-items:stretch;display:flex;flex-direction:column}
+.padout{min-width:0;width:100%;min-height:0;height:1.9em;font-size:1.5rem;line-height:1.9;border-bottom:3px solid var(--primary)}
+.pad{grid-template-columns:repeat(5,1fr);gap:.3rem;width:100%;max-width:640px;margin:0 auto;justify-content:stretch}
+.pad button{height:clamp(36px,7.6vh,62px);font-size:1.3rem;border-radius:.7rem;padding:0}
+.pad .del{grid-column:span 2}
+.pad .ok{grid-column:span 3;font-size:1.2rem}
+.fb{margin:0;flex:1;min-height:0;overflow:auto;padding:.7rem .9rem}
+.badge{font-size:1.35rem}
+.fb .vis{padding:.5rem;margin-top:.4rem}
+.steps{margin-top:.5rem;gap:4px}
+.steps li{font-size:.95rem}
+.tip{margin-top:.5rem;padding:.3rem .7rem;font-size:.85rem}
+.fb .row{margin-top:.5rem}
+.explained .atop{display:none}
+.atop .row{flex-wrap:nowrap;gap:.4rem}
+.atop .row .soft,.atop .row .big{white-space:nowrap}
+@media (min-aspect-ratio:1/1) and (min-width:641px){.eq{font-size:clamp(2rem,11vmin,5rem)}.mascot{width:clamp(56px,16vmin,120px);height:clamp(56px,16vmin,120px)}}
+@media (max-width:480px){.atop .row .soft,.atop .row .big{padding:.25rem .6rem;font-size:.95rem}}
+@media (max-aspect-ratio:1/1),(max-width:640px){
+  .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px}
+  .qside{max-height:36dvh}
+}
+@media (max-height:480px) and (min-aspect-ratio:3/2){
+  .bar{margin-bottom:4px;min-height:36px}
+  .aiedu-home{width:36px;height:36px}.aiedu-home svg{width:24px;height:24px}
+  .bar{padding-left:46px}
+  .stage{padding:6px;gap:8px}
+  .pad button{height:clamp(28px,9vh,40px);font-size:1.05rem}
+  .padout{font-size:1.2rem;height:1.5em;line-height:1.5}
+  .mic{width:clamp(44px,15vh,64px);height:clamp(44px,15vh,64px)}
+  .soft{padding:.15rem .8rem;font-size:.95rem}.big{padding:.2rem 1rem;font-size:1.05rem}
+}
 </style>
 </head>
 <body>
@@ -244,43 +312,42 @@ a.draggable=false;})();
         <button class="mini" id="btnSound" aria-pressed="true"></button>
         <button class="mini" id="btnQuit">그만하기</button>
       </div>
-      <div class="stage">
-        <div class="talk">
-          <div id="playMascot"></div>
-          <div class="qbubble">
-            <p class="say" id="say"></p>
-            <div class="eq" id="eq" aria-live="polite"></div>
-            <button class="soft replay" id="btnReplay"><span id="icSpk"></span> 다시 듣기</button>
+      <div class="stage" id="stage">
+        <div class="qside">
+          <div class="talk">
+            <div id="playMascot"></div>
+            <div class="qbubble">
+              <p class="say" id="say"></p>
+              <div class="eq" id="eq" aria-live="polite"></div>
+              <button class="soft replay" id="btnReplay"><span id="icSpk"></span> 다시 듣기</button>
+            </div>
           </div>
+          <div class="vis" id="qvis"></div>
+          <div class="hint" id="hint" hidden></div>
         </div>
-        <div class="vis" id="qvis"></div>
-        <div class="hint" id="hint" hidden></div>
-
-        <div class="panel" id="pVoice" hidden>
-          <button class="mic" id="btnMic" data-s="idle" aria-label="말하기 시작"></button>
-          <p class="status" id="micStatus"></p>
-          <div class="row">
-            <button class="soft" id="btnShowPad">숫자 버튼으로 답할래요</button>
-            <button class="soft" data-act="skip">모르겠어요</button>
+        <div class="aside">
+          <div class="atop">
+            <div class="panel" id="pVoice" hidden>
+              <button class="mic" id="btnMic" data-s="idle" aria-label="말하기 시작"></button>
+              <p class="status" id="micStatus"></p>
+              <button class="soft" data-act="skip">모르겠어요</button>
+            </div>
+            <div class="panel" id="pWrite" hidden>
+              <div class="cvwrap"><canvas id="cv" aria-label="숫자를 쓰는 칸"></canvas></div>
+              <p class="status" id="wrStatus">점선 위에 답을 써 보세요.</p>
+              <div class="row">
+                <button class="soft" id="btnClear">지우기</button>
+                <button class="big" id="btnDone">다 썼어요</button>
+                <button class="soft" data-act="skip">모르겠어요</button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div class="panel" id="pWrite" hidden>
-          <div class="cvwrap"><canvas id="cv" aria-label="숫자를 쓰는 칸"></canvas></div>
-          <p class="status" id="wrStatus">점선 위에 답을 써 보세요.</p>
-          <div class="row">
-            <button class="soft" id="btnClear">지우기</button>
-            <button class="big" id="btnDone">다 썼어요</button>
-            <button class="soft" data-act="skip">모르겠어요</button>
+          <div class="panel" id="pPad" hidden>
+            <div class="padout" id="padOut" aria-live="polite"></div>
+            <div class="pad" id="padKeys"></div>
           </div>
+          <div class="fb" id="fb" hidden></div>
         </div>
-
-        <div class="panel" id="pPad" hidden>
-          <div class="padout" id="padOut" aria-live="polite"></div>
-          <div class="pad" id="padKeys"></div>
-        </div>
-
-        <div class="fb" id="fb" hidden></div>
       </div>
     </section>
 
@@ -563,7 +630,7 @@ function parseNum(raw){
 const TOTAL=10;
 const G={q:null,idx:0,res:[],tries:0,phase:'idle',lastGiven:null,padVal:''};
 const views={home:$('#vHome'),play:$('#vPlay'),result:$('#vResult'),ideas:$('#vIdeas')};
-function show(v){Object.entries(views).forEach(([k,el])=>el.hidden=k!==v);
+function show(v){document.body.classList.toggle('playing',v==='play');Object.entries(views).forEach(([k,el])=>el.hidden=k!==v);
   $('#tabPlay').setAttribute('aria-selected',v!=='ideas');$('#tabIdea').setAttribute('aria-selected',v==='ideas');
   if(v!=='play'){try{speechSynthesis.cancel()}catch(e){}stopListen();sayId++}
   window.scrollTo({top:0})}
@@ -580,7 +647,7 @@ function hidePanels(){['pVoice','pWrite','pPad','fb','hint'].forEach(i=>$('#'+i)
 function next(){
   if(G.idx>=TOTAL)return finish();
   const q=G.q=gen(sel.kind,sel.level);G.tries=0;G.lastGiven=null;G.phase='asking';
-  pips($('#pips'),G.idx);hidePanels();
+  $('#stage').classList.remove('explained');pips($('#pips'),G.idx);hidePanels();showInputs();
   $('#mascot').dataset.mood='happy';
   $('#say').textContent=qShow(q);$('#say').hidden=!qShow(q);
   $('#eq').innerHTML=`${q.a} ${SYM[q.kind]} ${q.b} = <span class="q">?</span>`;
@@ -589,21 +656,20 @@ function next(){
   say(qSpeech(q),openInput);
   window.scrollTo({top:0,behavior:'smooth'});
 }
+function showInputs(){
+  G.padVal='';$('#padOut').textContent='';$('#pPad').hidden=false;
+  if(sel.mode==='voice'){$('#pVoice').hidden=false;$('#pWrite').hidden=true;setMic('idle')}
+  else{$('#pWrite').hidden=false;$('#pVoice').hidden=true;$('#wrStatus').textContent='점선 위에 답을 써 보세요.';requestAnimationFrame(()=>{sizeCv();clearCv()})}
+}
 function openInput(){
   if(G.phase!=='asking'&&G.phase!=='answering')return;
   G.phase='answering';
-  if(sel.mode==='voice'){
-    $('#pVoice').hidden=false;$('#pWrite').hidden=true;$('#pPad').hidden=true;
-    setMic('idle');setTimeout(()=>listen(),450);
-  }else{
-    $('#pWrite').hidden=false;$('#pVoice').hidden=true;$('#pPad').hidden=true;
-    sizeCv();clearCv();$('#wrStatus').textContent='점선 위에 답을 써 보세요.';
-  }
+  if(sel.mode==='voice'){setMic('idle');setTimeout(()=>listen(),450)}
 }
 $('#btnReplay').onclick=()=>{stopListen();say(qSpeech(G.q),()=>{if(G.phase==='answering'||G.phase==='asking'){G.phase='asking';openInput()}})};
 
 function judge(val){
-  if(G.phase!=='answering')return;
+  if(G.phase!=='answering'&&G.phase!=='asking')return;
   stopListen();G.phase='judging';G.lastGiven=val;
   if(val===G.q.ans){G.res[G.idx]=G.tries===0?'ok':'retry';feedback('ok')}
   else{
@@ -611,7 +677,7 @@ function judge(val){
     if(G.tries===1){
       G.phase='answering';
       const h=$('#hint');h.hidden=false;
-      h.innerHTML=`<p style="font-family:var(--font-display);font-size:1.5rem">다시 한 번 생각해 보세요.</p><p><b>${val}</b>이라고 했군요. ${diag(G.q,val)} ${hintFor(G.q)}</p>`;
+      h.innerHTML=`<p class="hint-t">다시 한 번 생각해 보세요.</p><p><b>${val}</b>이라고 했군요. ${diag(G.q,val)} ${hintFor(G.q)}</p>`;
       if(G.q.L!==0)$('#qvis').innerHTML=pvis(G.q);
       $('#mascot').dataset.mood='oops';
       resetInputs();
@@ -620,17 +686,17 @@ function judge(val){
   }
 }
 function resetInputs(){
-  G.padVal='';$('#padOut').textContent='';
-  if(sel.mode==='write'){$('#pPad').hidden=true}else{$('#pPad').hidden=true}
+  G.padVal='';$('#padOut').textContent='';$('#pPad').hidden=false;
+  if(sel.mode==='write')clearCv();
 }
-function giveUp(){if(G.phase!=='answering')return;stopListen();G.phase='judging';G.res[G.idx]='miss';G.lastGiven=null;feedback('miss')}
+function giveUp(){if(G.phase!=='answering'&&G.phase!=='asking')return;stopListen();G.phase='judging';G.res[G.idx]='miss';G.lastGiven=null;feedback('miss')}
 document.querySelector('.stage').addEventListener('click',e=>{
   const b=e.target.closest('[data-act="skip"]');if(b)giveUp()});
 
 const PRAISE=['정답이에요! 대단해요!','맞았어요! 최고예요!','와, 척척박사!','딱 맞았어요!'];
 function feedback(kind){
   G.phase='explained';
-  hidePanels();
+  hidePanels();$('#stage').classList.add('explained');
   const q=G.q,ex=explain(q);
   const ok=kind==='ok';
   $('#mascot').dataset.mood=ok?'cheer':'oops';
@@ -710,13 +776,12 @@ function listen(fresh=true){
   }catch(e){setMic('blocked');showPad()}},had?350:0);
 }
 $('#btnMic').onclick=()=>{if(G.phase!=='answering')return;if(rec&&$('#btnMic').dataset.s==='listening'){try{rec.stop()}catch(e){}}else listen()};
-$('#btnShowPad').onclick=()=>{stopListen();showPad()};
 
 /* ---------- 숫자 패드 ---------- */
-$('#padKeys').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('')+`<button data-k="del" aria-label="지우기">⌫</button><button data-k="0">0</button><button class="ok" data-k="ok">확인</button>`;
+$('#padKeys').innerHTML=[1,2,3,4,5,6,7,8,9,0].map(n=>`<button data-k="${n}">${n}</button>`).join('')+`<button class="del" data-k="del" aria-label="지우기">⌫</button><button class="ok" data-k="ok">확인</button>`;
 function showPad(){$('#pPad').hidden=false;$('#padOut').textContent=G.padVal||'';}
 $('#padKeys').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||G.phase!=='answering')return;
+  const b=e.target.closest('button');if(!b||(G.phase!=='answering'&&G.phase!=='asking'))return;
   const k=b.dataset.k;
   if(k==='del')G.padVal=G.padVal.slice(0,-1);
   else if(k==='ok'){if(G.padVal!==''){const v=+G.padVal;G.padVal='';$('#padOut').textContent='';judge(v)}return}
@@ -735,6 +800,7 @@ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);cur=[pt(
 cv.addEventListener('pointermove',e=>{if(!cur)return;cur.push(pt(e));redraw()});
 ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{cur=null}));
 window.addEventListener('resize',()=>{if(!$('#pWrite').hidden)sizeCv()});
+try{new ResizeObserver(()=>{if(!$('#pWrite').hidden)sizeCv()}).observe(cv.parentElement)}catch(e){}
 $('#btnClear').onclick=clearCv;
 async function tryRecognize(){
   if(!('createHandwritingRecognizer' in navigator))return null;
@@ -748,12 +814,12 @@ async function tryRecognize(){
   }catch(e){return null}
 }
 $('#btnDone').onclick=async()=>{
-  if(G.phase!=='answering')return;
+  if(G.phase!=='answering'&&G.phase!=='asking')return;
   if(!strokes.length){$('#wrStatus').textContent='먼저 숫자를 써 주세요!';return}
   $('#wrStatus').textContent='셈이가 살펴보는 중…';
   const t=await tryRecognize();
   if(t){$('#wrStatus').textContent=`"${t}"라고 썼군요!`;setTimeout(()=>judge(+t),600)}
-  else{$('#wrStatus').textContent='뭐라고 썼는지 아래 숫자를 눌러 알려 주세요. (필기 인식은 정식 앱에서 자동으로 돼요)';showPad()}
+  else{$('#wrStatus').textContent='뭐라고 썼는지 아래 숫자를 눌러 알려 주세요.';showPad()}
 };
 
 /* ---------- 아이디어 화면 ---------- */
@@ -785,7 +851,6 @@ document.addEventListener('click',e=>{
   else if(t.closest('#btnSound'))txt=soundOn?'소리가 켜져 있어요':'';
   else if(t.closest('#btnClear'))txt='지우기';
   else if(t.closest('#btnDone'))txt='';
-  else if(t.closest('#btnShowPad'))txt='숫자 버튼으로 답해요';
   else if(t.closest('[data-act="skip"]'))txt='';
   else if(t.closest('#padKeys button')){const k=t.closest('button').dataset.k;txt=k==='del'?'지우기':k==='ok'?'':sino(+k)}
   else if(t.closest('.idea'))txt=t.closest('.idea').querySelector('h3').textContent+'. '+t.closest('.idea').querySelector('p').textContent;
